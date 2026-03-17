@@ -1,0 +1,83 @@
+// Updated Prisma schema with responsive design support
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Advertisement {
+  id              String   @id @default(uuid())
+  title           String
+  redirectUrl     String
+  placement       String   // "header_banner", "sidebar_top", etc.
+  active          Boolean  @default(true)
+  
+  // Responsive images  
+  images          AdImage[]
+  
+  // Device targeting
+  deviceTarget    String   @default("all")  // "all", "mobile_only", "desktop_only", "tablet_only"
+  
+  // Content status
+  approval        String   @default("pending")  // "pending", "approved", "rejected"
+  
+  // Scheduling
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  // Analytics
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  
+  // Metadata
+  priority        Int      @default(0)  // Higher priority shows first
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([placement, active, approval])
+  @@index([deviceTarget])
+}
+
+model AdImage {
+  id              String   @id @default(uuid())
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+  advertisementId String
+  
+  // Image variants for different screen sizes
+  variant         String   // "mobile", "tablet", "desktop", "webp_mobile", etc.
+  imageUrl        String
+  
+  // Image metadata
+  width           Int      // Original width
+  height          Int      // Original height
+  fileSize        Int      // Bytes
+  format          String   // "jpg", "png", "webp", "avif"
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([advertisementId, variant])
+  @@index([format])
+}
+
+model AdAnalytics {
+  id              String   @id @default(uuid())
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade) | Advertisement
+  advertisementId String
+  
+  date            DateTime @db.Date
+  device          String   // "mobile", "tablet", "desktop"
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  ctr             Float    @default(0) // Click-through rate
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([advertisementId, date, device])
+  @@index([date])
+}

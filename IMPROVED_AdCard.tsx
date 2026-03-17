@@ -1,3 +1,4 @@
+// AdCard.tsx - Improved with image optimization and responsive features
 'use client'
 
 import { useState } from 'react'
@@ -6,10 +7,9 @@ interface AdCardProps {
   ad: {
     id: string
     title: string
-    imageUrl?: string
+    imageUrl: string
     redirectUrl: string
     placement: string
-    images?: any[]
   }
   width?: number
   height?: number
@@ -21,13 +21,7 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
 
   const handleClick = () => {
     // Track ad click
-    if (ad.id) {
-      fetch(`/api/ads/${ad.id}/click`, { method: 'POST' })
-        .then(() => window.open(ad.redirectUrl, '_blank'))
-        .catch(() => window.open(ad.redirectUrl, '_blank'))
-    } else {
-      window.open(ad.redirectUrl, '_blank')
-    }
+    fetch(`/api/ads/${ad.id}/click`, { method: 'POST' }).catch(() => {})
   }
 
   const handleLoad = () => {
@@ -37,29 +31,6 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
   const handleError = () => {
     setHasError(true)
     setIsLoading(false)
-  }
-
-  // Get the image URL - prefer device-specific or fallback to main
-  const imageUrl = ad.imageUrl || (ad.images?.length > 0 ? ad.images[0].imageUrl : '')
-
-  if (!imageUrl) {
-    return (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#f0f0f0',
-          fontSize: '12px',
-          color: '#666',
-          borderRadius: '4px',
-        }}
-      >
-        No image available
-      </div>
-    )
   }
 
   if (hasError) {
@@ -74,7 +45,6 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
           backgroundColor: '#f0f0f0',
           fontSize: '12px',
           color: '#666',
-          borderRadius: '4px',
         }}
       >
         Ad unavailable
@@ -83,7 +53,10 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
   }
 
   return (
-    <button
+    <a
+      href={ad.redirectUrl}
+      target="_blank"
+      rel="noopener noreferrer"
       onClick={handleClick}
       style={{
         display: 'block',
@@ -92,14 +65,8 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
         position: 'relative',
         overflow: 'hidden',
         textDecoration: 'none',
-        border: 'none',
-        padding: 0,
-        margin: 0,
-        cursor: 'pointer',
-        background: 'transparent',
       }}
       title={ad.title}
-      aria-label={ad.title}
     >
       {/* Loading skeleton */}
       {isLoading && (
@@ -110,14 +77,13 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
             height: '100%',
             backgroundColor: '#e0e0e0',
             animation: 'pulse 1.5s infinite',
-            zIndex: 1,
           }}
         />
       )}
 
       {/* Responsive Image */}
       <img
-        src={imageUrl}
+        src={ad.imageUrl}
         alt={ad.title}
         onLoad={handleLoad}
         onError={handleError}
@@ -126,9 +92,6 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
           height: '100%',
           objectFit: 'cover',
           display: isLoading ? 'none' : 'block',
-          position: 'absolute',
-          top: 0,
-          left: 0,
         }}
       />
 
@@ -138,6 +101,6 @@ export default function AdCard({ ad, width = 300, height = 250 }: AdCardProps) {
           50% { opacity: 0.5; }
         }
       `}</style>
-    </button>
+    </a>
   )
 }

@@ -8,11 +8,52 @@ datasource db {
 }
 
 model Advertisement {
-  id          String   @id @default(uuid())
-  title       String
-  imageUrl    String
-  redirectUrl String
-  placement   String
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id              String   @id @default(uuid())
+  title           String
+  redirectUrl     String
+  placement       String
+  active          Boolean  @default(true)
+  
+  // Responsive images  
+  images          AdImage[]
+  
+  // Device targeting
+  deviceTarget    String   @default("all")
+  
+  // Content status
+  approval        String   @default("pending")
+  
+  // Scheduling
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  // Analytics
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  
+  // Metadata
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  
+  @@index([placement, active, approval])
+  @@index([deviceTarget])
+}
+
+model AdImage {
+  id              String   @id @default(uuid())
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+  advertisementId String
+  
+  variant         String
+  imageUrl        String
+  width           Int
+  height          Int
+  fileSize        Int
+  format          String
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([advertisementId, variant])
+  @@index([format])
 }
